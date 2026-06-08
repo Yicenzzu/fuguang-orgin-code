@@ -1,0 +1,10 @@
+.DS_Store
+.build/
+.swiftpm/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+agent_memory/
+dist/
+!releases/
+!releases/*.dmg
