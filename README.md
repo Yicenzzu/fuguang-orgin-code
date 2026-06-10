@@ -73,6 +73,15 @@ Fuguang 当前支持以下动作类型：
 
 说明：当前安装包使用本地 ad-hoc 签名，适合本机测试和信任设备分发；还不是 Apple Developer ID 公证版本。
 
+## macOS 版本适配
+
+- 最低支持版本：macOS 14 Sonoma。
+- 推荐运行版本：macOS 14 或更新版本；在 macOS 15 Sequoia 上可继续运行。
+- 截图功能依赖系统屏幕录制权限。首次开启权限后，通常需要完全退出并重新打开 Fuguang，权限状态才会对当前应用进程生效。
+- 截图采集优先使用当前系统可用的屏幕捕获能力，并保留兼容路径，以适配不同 macOS 14/15 小版本中的 ScreenCaptureKit 行为差异。
+- 全局快捷键使用 Carbon `RegisterEventHotKey`，在 macOS 14+ 上可用于注册 `Control` / `Option` 组合键；部分全局按键监听和权限状态刷新可能受系统安全策略影响。
+- 开机启动使用 macOS 现代登录项能力，适配 macOS 14+；修改后可能需要重启应用或重新登录后观察最终状态。
+
 ## 构建方式
 
 项目目前使用 Swift Package 组织：
@@ -89,7 +98,7 @@ swift build -c release
 
 当前目标平台：
 
-- macOS 14+
+- macOS 14 Sonoma 或更新版本
 - Swift 5.10+
 - 完整 Xcode 环境推荐
 
