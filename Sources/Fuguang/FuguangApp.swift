@@ -7,6 +7,7 @@ struct FuguangApp: App {
     @AppStorage("hotKeyModifier") private var hotKeyModifierRawValue = HotKeyModifier.control.rawValue
     @StateObject private var store = ShortcutStore()
     @StateObject private var hotKeys = GlobalHotKeyManager()
+    @StateObject private var permissions = PermissionManager.shared
 
     var body: some Scene {
         WindowGroup {
@@ -15,7 +16,7 @@ struct FuguangApp: App {
                 .environmentObject(hotKeys)
                 .frame(minWidth: 1000, minHeight: 500)
                 .task {
-                    ScreenshotOverlayController.hotKeys = hotKeys
+                    permissions.refresh()
                     hotKeys.configure(with: store)
                 }
                 .onChange(of: store.bindings) { _, _ in
@@ -35,6 +36,12 @@ struct FuguangApp: App {
         MenuBarExtra("Fuguang", systemImage: hotKeys.isEnabled ? "keyboard" : "keyboard.badge.ellipsis") {
             Button("打开 Fuguang") {
                 AppWindowController.showMainWindow()
+            }
+
+            Divider()
+
+            Button("权限与状态") {
+                PermissionStatusWindowController.shared.show()
             }
 
             Divider()
@@ -104,6 +111,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let openItem = NSMenuItem(title: "打开 Fuguang", action: #selector(openMainWindow), keyEquivalent: "")
         openItem.target = self
         menu.addItem(openItem)
+
+        let permissionItem = NSMenuItem(title: "权限与状态", action: #selector(openPermissionStatus), keyEquivalent: "")
+        permissionItem.target = self
+        menu.addItem(permissionItem)
+
         menu.addItem(.separator())
 
         for appearance in BackgroundAppearance.allCases {
@@ -135,6 +147,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func openMainWindow() {
         Task { @MainActor in
             AppWindowController.showMainWindow()
+        }
+    }
+
+    @objc private func openPermissionStatus() {
+        Task { @MainActor in
+            PermissionStatusWindowController.shared.show()
         }
     }
 

@@ -2,11 +2,24 @@ import AppKit
 import Foundation
 
 enum ActionRunner {
+    /// 是否在执行动作前检测权限
+    static var checkPermissionBeforeRun = true
+
     @MainActor
     static func run(_ binding: ShortcutBinding, store: ShortcutStore) {
         guard binding.isConfigured else {
             store.lastMessage = "\(binding.key) 尚未设置动作"
             return
+        }
+
+        if Self.checkPermissionBeforeRun {
+            PermissionManager.shared.refresh()
+            if let guide = binding.kind.requiredPermissionGuide,
+               !PermissionManager.shared.status(for: guide).isReady {
+                store.lastMessage = "\(binding.kind.title) 需要先开启权限"
+                PermissionStatusWindowController.shared.show(guide: guide)
+                return
+            }
         }
 
         switch binding.kind {
@@ -18,15 +31,17 @@ enum ActionRunner {
             openFileURL(binding, store: store, missingMessage: "文件夹不存在")
         case .openWebsite:
             openWebsite(binding, store: store)
+        case .showDesktop:
+            showDesktop(store: store)
         case .screenshot:
-            runInteractiveScreenshot(store: store)
+            takeScreenshot(store: store)
         case .imageResize:
             ImageToolWindowController.shared.show(store: store)
             store.lastMessage = "已打开浮光改图"
         case .imageQuickLook:
             quickLookImage(binding, store: store)
         case .clipboard:
-            store.lastMessage = "浮光剪贴已预留：下一步接入历史剪贴板"
+            showClipboard(store: store)
         case .lockScreen:
             lockScreen(store: store)
         }
@@ -56,11 +71,6 @@ enum ActionRunner {
     }
 
     @MainActor
-    private static func runInteractiveScreenshot(store: ShortcutStore) {
-        ScreenshotOverlayController.shared.begin(store: store)
-    }
-
-    @MainActor
     private static func quickLookImage(_ binding: ShortcutBinding, store: ShortcutStore) {
         let url = URL(fileURLWithPath: binding.target)
         guard FileManager.default.fileExists(atPath: url.path) else {
@@ -70,6 +80,49 @@ enum ActionRunner {
 
         NSWorkspace.shared.activateFileViewerSelecting([url])
         store.lastMessage = "已在访达定位 \(binding.displayTitle)"
+    }
+
+    @MainActor
+    private static func showDesktop(store: ShortcutStore) {
+        let script = NSAppleScript(source: #"tell application "System Events" to key code 103"#)
+        var error: NSDictionary?
+        script?.executeAndReturnError(&error)
+
+        if let error {
+            store.lastMessage = "回桌失败：\(error["NSAppleScriptErrorMessage"] as? String ?? "需要辅助功能权限")"
+        } else {
+            store.lastMessage = "已切回桌面"
+        }
+    }
+
+    @MainActor
+    private static func takeScreenshot(store: ShortcutStore) {
+        AppWindowController.hideMainWindow()
+        ScreenshotOverlayController.shared.show(store: store)
+    }
+
+    @MainActor
+    private static func showClipboard(store: ShortcutStore) {
+        let pasteboard = NSPasteboard.general
+        let message: String
+
+        if let string = pasteboard.string(forType: .string), !string.isEmpty {
+            message = String(string.prefix(800))
+        } else if let fileURLs = pasteboard.readObjects(forClasses: [NSURL.self]) as? [URL], !fileURLs.isEmpty {
+            message = fileURLs.map(\.path).joined(separator: "\n")
+        } else if pasteboard.canReadObject(forClasses: [NSImage.self]) {
+            message = "剪贴板中有图片内容。"
+        } else {
+            message = "剪贴板暂无可预览内容。"
+        }
+
+        let alert = NSAlert()
+        alert.messageText = "浮光剪贴"
+        alert.informativeText = message
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "知道了")
+        alert.runModal()
+        store.lastMessage = "已查看剪贴板"
     }
 
     @MainActor
@@ -95,5 +148,18 @@ enum ActionRunner {
         }
 
         return URL(string: "https://\(trimmed)")
+    }
+}
+
+private extension ShortcutActionKind {
+    var requiredPermissionGuide: PermissionGuide? {
+        switch self {
+        case .showDesktop:
+            return .accessibility
+        case .screenshot:
+            return .screenRecording
+        default:
+            return nil
+        }
     }
 }

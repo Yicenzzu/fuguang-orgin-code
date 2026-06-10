@@ -119,13 +119,12 @@ final class GlobalHotKeyManager: ObservableObject {
     }
 
     private func trigger(_ key: String) {
-        guard isEnabled, let store, !ScreenshotOverlayController.shared.isActive else { return }
+        guard isEnabled, let store else { return }
+        guard !ScreenshotOverlayController.isActive else { return }
         didUseKeyDuringModifierPress = true
         let binding = store.binding(for: key)
         ActionRunner.run(binding, store: store)
-        if binding.kind != .screenshot {
-            AppWindowController.hideMainWindow()
-        }
+        AppWindowController.hideMainWindow()
     }
 
     private func installFlagsMonitorIfNeeded() {
@@ -184,20 +183,13 @@ final class GlobalHotKeyManager: ObservableObject {
         }
     }
 
-    /// 截图开始时调用，注销所有热键
-    func suspendForScreenshot() {
-        unregisterAll()
-        resetModifierToggleState()
-        statusText = "截图模式"
-    }
-
-    /// 截图结束时调用，重新注册热键
-    func resumeFromScreenshot() {
-        refresh()
-    }
-
     private func handleFlagsChanged(_ event: NSEvent) {
         guard isEnabled else {
+            resetModifierToggleState()
+            return
+        }
+
+        guard !ScreenshotOverlayController.isActive else {
             resetModifierToggleState()
             return
         }
@@ -216,7 +208,7 @@ final class GlobalHotKeyManager: ObservableObject {
 
         guard isModifierPressedForToggle else { return }
 
-        if !didUseKeyDuringModifierPress, !ScreenshotOverlayController.shared.isActive {
+        if !didUseKeyDuringModifierPress {
             if shouldCloseMainWindowOnModifierRelease {
                 AppWindowController.hideMainWindow()
             } else {
@@ -227,7 +219,7 @@ final class GlobalHotKeyManager: ObservableObject {
     }
 
     private func handleKeyDownDuringModifierPress(_ event: NSEvent) {
-        guard isModifierPressedForToggle, !ScreenshotOverlayController.shared.isActive else { return }
+        guard isModifierPressedForToggle else { return }
         let activeFlags = event.modifierFlags.intersection([.option, .control, .command, .shift, .capsLock])
         if activeFlags.contains(modifier.eventModifierFlag) {
             didUseKeyDuringModifierPress = true

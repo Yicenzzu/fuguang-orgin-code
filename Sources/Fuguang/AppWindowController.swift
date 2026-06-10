@@ -3,6 +3,10 @@ import AppKit
 @MainActor
 enum AppWindowController {
     private static let fixedSize = NSSize(width: 1000, height: 500)
+    static let mainWindowIdentifier = NSUserInterfaceItemIdentifier("FuguangMainWindow")
+    static let permissionWindowIdentifier = NSUserInterfaceItemIdentifier("FuguangPermissionStatusWindow")
+    static let imageToolWindowIdentifier = NSUserInterfaceItemIdentifier("FuguangImageToolWindow")
+    static let screenshotOverlayIdentifier = NSUserInterfaceItemIdentifier("FuguangScreenshotOverlay")
 
     static func showMainWindow() {
         NSApp.activate(ignoringOtherApps: true)
@@ -20,9 +24,16 @@ enum AppWindowController {
     }
 
     static var mainWindow: NSWindow? {
-        NSApp.windows.first { window in
-            !(window.contentView is ScreenshotOverlayView)
-                && window.className != "NSStatusBarWindow"
+        if let window = NSApp.windows.first(where: { window in
+            window.identifier == mainWindowIdentifier
+        }) {
+            return window
+        }
+
+        return NSApp.windows.first { window in
+            window.className != "NSStatusBarWindow"
+                && window.identifier != permissionWindowIdentifier
+                && window.identifier != imageToolWindowIdentifier
         }
     }
 
@@ -31,6 +42,7 @@ enum AppWindowController {
     }
 
     static func prepare(_ window: NSWindow) {
+        window.identifier = mainWindowIdentifier
         window.isOpaque = false
         window.backgroundColor = .clear
         window.hasShadow = true

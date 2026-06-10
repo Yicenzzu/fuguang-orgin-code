@@ -25,6 +25,7 @@ final class ImageToolWindowController {
             defer: false
         )
         window.title = "浮光改图"
+        window.identifier = AppWindowController.imageToolWindowIdentifier
         window.minSize = NSSize(width: 980, height: 620)
         window.maxSize = NSSize(width: 980, height: 620)
         window.contentView = hostingView

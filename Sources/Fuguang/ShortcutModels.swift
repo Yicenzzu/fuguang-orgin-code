@@ -5,6 +5,7 @@ enum ShortcutActionKind: String, Codable, CaseIterable, Identifiable {
     case openApplication
     case openFolder
     case openWebsite
+    case showDesktop
     case screenshot
     case imageResize
     case imageQuickLook
@@ -23,6 +24,8 @@ enum ShortcutActionKind: String, Codable, CaseIterable, Identifiable {
             return "打开文件夹"
         case .openWebsite:
             return "打开网站"
+        case .showDesktop:
+            return "浮光回桌"
         case .screenshot:
             return "浮光截图"
         case .imageResize:
@@ -46,8 +49,10 @@ enum ShortcutActionKind: String, Codable, CaseIterable, Identifiable {
             return "打开常用文件夹"
         case .openWebsite:
             return "打开网页或工作台"
+        case .showDesktop:
+            return "切回桌面空间"
         case .screenshot:
-            return "框选/手动选区并输出 PNG"
+            return "智能 / 手动选区并输出 PNG"
         case .imageResize:
             return "批量压缩、转格式并调整尺寸"
         case .imageQuickLook:
@@ -69,6 +74,8 @@ enum ShortcutActionKind: String, Codable, CaseIterable, Identifiable {
             return "folder"
         case .openWebsite:
             return "globe"
+        case .showDesktop:
+            return "house"
         case .screenshot:
             return "camera.viewfinder"
         case .imageResize:
@@ -84,7 +91,7 @@ enum ShortcutActionKind: String, Codable, CaseIterable, Identifiable {
 
     var requiresTarget: Bool {
         switch self {
-        case .none, .screenshot, .imageResize, .clipboard, .lockScreen:
+        case .none, .showDesktop, .screenshot, .imageResize, .clipboard, .lockScreen:
             return false
         case .openApplication, .openFolder, .openWebsite, .imageQuickLook:
             return true
@@ -116,7 +123,7 @@ struct ShortcutBinding: Codable, Equatable, Identifiable {
             return URL(fileURLWithPath: target).deletingPathExtension().lastPathComponent
         case .openWebsite:
             return target
-        case .screenshot, .imageResize, .clipboard, .lockScreen:
+        case .showDesktop, .screenshot, .imageResize, .clipboard, .lockScreen:
             return kind.title
         }
     }
@@ -137,4 +144,14 @@ enum KeyboardLayout {
 
     static let keys = rows.flatMap { $0 }
     static let letters = keys
+}
+
+extension ShortcutActionKind {
+    static let fuguangActions: [ShortcutActionKind] = [
+        .showDesktop,
+        .screenshot,
+        .imageResize,
+        .clipboard,
+        .lockScreen
+    ]
 }

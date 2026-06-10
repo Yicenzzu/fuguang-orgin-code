@@ -63,13 +63,11 @@ struct KeyboardView: View {
 
                                 Divider()
 
-                                Menu("浮光操作") {
-                                    ForEach([ShortcutActionKind.screenshot, .imageResize, .imageQuickLook, .clipboard, .lockScreen]) { kind in
-                                        Button {
-                                            onConfigure(key, kind)
-                                        } label: {
-                                            Label(kind.title, systemImage: kind.systemImage)
-                                        }
+                                ForEach(ShortcutActionKind.fuguangActions) { kind in
+                                    Button {
+                                        onConfigure(key, kind)
+                                    } label: {
+                                        Label(kind.title, systemImage: kind.systemImage)
                                     }
                                 }
                             }

@@ -14,7 +14,6 @@ struct KeyConfigurationView: View {
     @State private var draftTarget = ""
     @State private var appSearchText = ""
     @State private var folderSearchText = ""
-    @State private var fuguangSearchText = ""
     @State private var availableApplications: [ApplicationCandidate] = []
     @State private var isLoadingApplications = false
     @State private var didLoadApplications = false
@@ -22,7 +21,7 @@ struct KeyConfigurationView: View {
 
     var body: some View {
         panelContent
-            .padding(selectedSection == nil ? 8 : 28)
+            .padding(selectedSection == nil ? 8 : 16)
             .background {
                 panelBackground
             }
@@ -69,7 +68,7 @@ struct KeyConfigurationView: View {
     }
 
     private var panelBackground: some View {
-        let cornerRadius: CGFloat = selectedSection == nil ? 12 : 24
+        let cornerRadius: CGFloat = selectedSection == nil ? 12 : 20
 
         return RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
             .fill(.ultraThinMaterial)
@@ -77,11 +76,7 @@ struct KeyConfigurationView: View {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .fill(Color.black.opacity(selectedSection == nil ? 0.18 : 0.22))
             }
-            .overlay {
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(Color.white.opacity(0.18), lineWidth: 1)
-            }
-            .shadow(color: Color.black.opacity(0.24), radius: 24, y: 14)
+            .shadow(color: Color.black.opacity(0.20), radius: 16, y: 8)
     }
 
     @ViewBuilder
@@ -117,33 +112,17 @@ struct KeyConfigurationView: View {
             .buttonStyle(GlassPressButtonStyle())
             .foregroundStyle(.red.opacity(0.92))
         } else if selectedSection != nil {
-            VStack(spacing: 10) {
-                if selectedSection == .website {
-                    Button {
-                        save()
-                        onClose()
-                    } label: {
-                        Label("保存网页到 \(key)", systemImage: "checkmark")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                    .disabled(!canSave)
+            if selectedSection == .website {
+                Button {
+                    save()
+                    onClose()
+                } label: {
+                    Label("保存网页到 \(key)", systemImage: "checkmark")
+                        .frame(maxWidth: .infinity)
                 }
-
-                HStack {
-                    Spacer()
-
-                    Button("清除") {
-                        withAnimation(.spring(response: 0.22, dampingFraction: 0.9)) {
-                            store.clear(key)
-                            syncFromStore()
-                            selectedSection = nil
-                            onClose()
-                        }
-                    }
-                    .foregroundStyle(.red.opacity(0.9))
-                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .disabled(!canSave)
             }
         }
     }
@@ -151,8 +130,8 @@ struct KeyConfigurationView: View {
     private var detailHeader: some View {
         HStack(alignment: .top) {
             Label(selectedSection?.title ?? "功能", systemImage: selectedSection?.systemImage ?? "sparkles")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.92))
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(Color.white.opacity(0.92))
 
             Spacer()
 
@@ -162,8 +141,8 @@ struct KeyConfigurationView: View {
                 Image(systemName: "xmark")
             }
             .buttonStyle(.plain)
-            .font(.system(size: 16, weight: .bold))
-            .foregroundStyle(.white.opacity(0.65))
+            .font(.system(size: 14, weight: .bold))
+            .foregroundStyle(Color.white.opacity(0.65))
             .help("关闭")
         }
     }
@@ -231,7 +210,7 @@ struct KeyConfigurationView: View {
             return ActionRunner.normalizedURL(from: draftTarget) != nil
         case .imageQuickLook:
             return FileManager.default.fileExists(atPath: draftTarget)
-        case .screenshot, .imageResize, .clipboard, .lockScreen:
+        case .showDesktop, .screenshot, .imageResize, .clipboard, .lockScreen:
             return true
         }
     }
@@ -248,10 +227,10 @@ struct KeyConfigurationView: View {
     private func darkTextField(_ placeholder: String, text: Binding<String>) -> some View {
         TextField(placeholder, text: text)
             .textFieldStyle(.plain)
-            .font(.system(size: 13, weight: .medium))
+            .font(.system(size: 12, weight: .medium))
             .foregroundStyle(.white)
-            .padding(.horizontal, 12)
-            .frame(height: 38)
+            .padding(.horizontal, 10)
+            .frame(height: 32)
             .background {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(.white.opacity(0.08))
@@ -304,10 +283,6 @@ struct KeyConfigurationView: View {
                                 }
                                 .padding(.horizontal, 10)
                                 .frame(height: 38)
-                                .background {
-                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                        .fill(app.url.path == draftTarget ? .cyan.opacity(0.20) : .white.opacity(0.04))
-                                }
                             }
                             .buttonStyle(GlassPressButtonStyle())
                         }
@@ -375,38 +350,45 @@ struct KeyConfigurationView: View {
     }
 
     private var fuguangActionPicker: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            darkTextField("搜索浮光功能", text: $fuguangSearchText)
-
-            ScrollView {
-                LazyVStack(spacing: 6) {
-                    ForEach(filteredFuguangActions) { kind in
-                        selectableRow(
-                            title: kind.title,
-                            subtitle: kind.subtitle,
-                            systemImage: kind.systemImage
-                        ) {
-                            if kind == .imageQuickLook {
-                                draftKind = kind
-                                chooseImage()
-                            } else {
-                                saveBinding(kind: kind, title: kind.title, target: "")
-                            }
-                        }
-                    }
+        ScrollView {
+            LazyVStack(spacing: 6) {
+                ForEach(ShortcutActionKind.fuguangActions) { kind in
+                    fuguangActionRow(kind)
                 }
             }
-            .frame(maxHeight: 244)
         }
+        .frame(maxHeight: 220)
     }
 
-    private var filteredFuguangActions: [ShortcutActionKind] {
-        let actions: [ShortcutActionKind] = [.screenshot, .imageResize, .imageQuickLook, .clipboard, .lockScreen]
-        let query = fuguangSearchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else { return actions }
-        return actions.filter {
-            $0.title.localizedCaseInsensitiveContains(query) || $0.subtitle.localizedCaseInsensitiveContains(query)
+    private func fuguangActionRow(_ kind: ShortcutActionKind) -> some View {
+        Button {
+            saveBinding(kind: kind, title: kind.title, target: "")
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: kind.systemImage)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(.cyan)
+                    .frame(width: 26, height: 26)
+                    .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(kind.title)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.94))
+                        .lineLimit(1)
+
+                    Text(kind.subtitle)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.48))
+                        .lineLimit(1)
+                }
+
+                Spacer()
+            }
+            .padding(.horizontal, 10)
+            .frame(height: 46)
         }
+        .buttonStyle(GlassPressButtonStyle())
     }
 
     private func selectableRow(title: String, subtitle: String, systemImage: String, action: @escaping () -> Void) -> some View {
@@ -434,7 +416,6 @@ struct KeyConfigurationView: View {
             }
             .padding(.horizontal, 10)
             .frame(height: 46)
-            .background(.white.opacity(0.045), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
         }
         .buttonStyle(GlassPressButtonStyle())
     }
@@ -577,7 +558,7 @@ private enum ShortcutMenuSection: String, CaseIterable, Identifiable {
             self = .folder
         case .openWebsite:
             self = .website
-        case .screenshot, .imageResize, .imageQuickLook, .clipboard, .lockScreen:
+        case .showDesktop, .screenshot, .imageResize, .imageQuickLook, .clipboard, .lockScreen:
             self = .fuguang
         case .none:
             return nil
@@ -619,7 +600,7 @@ private enum ShortcutMenuSection: String, CaseIterable, Identifiable {
         case .website:
             return "globe"
         case .fuguang:
-            return "sparkles"
+            return "switch.2"
         }
     }
 
@@ -632,7 +613,7 @@ private enum ShortcutMenuSection: String, CaseIterable, Identifiable {
         case .website:
             return .openWebsite
         case .fuguang:
-            return .screenshot
+            return .showDesktop
         }
     }
 }
@@ -654,10 +635,32 @@ private struct FolderCandidate: Identifiable {
 
 private struct GlassPressButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
+        AnimatedGlassRow(configuration: configuration)
+    }
+}
+
+private struct AnimatedGlassRow: View {
+    let configuration: ButtonStyle.Configuration
+    @State private var isHovering = false
+
+    var body: some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.965 : 1.0)
-            .brightness(configuration.isPressed ? 0.08 : 0)
-            .animation(.spring(response: 0.18, dampingFraction: 0.72), value: configuration.isPressed)
+            .background {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(isHovering ? Color.white.opacity(0.10) : Color.white.opacity(0.001))
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(isHovering ? Color.white.opacity(0.16) : Color.clear, lineWidth: 1)
+            }
+            .scaleEffect(configuration.isPressed ? 0.965 : (isHovering ? 1.018 : 1.0))
+            .brightness(configuration.isPressed ? 0.08 : (isHovering ? 0.04 : 0))
+            .shadow(color: .black.opacity(isHovering ? 0.16 : 0), radius: 8, y: 4)
+            .animation(.spring(response: 0.20, dampingFraction: 0.74), value: configuration.isPressed)
+            .animation(.spring(response: 0.22, dampingFraction: 0.82), value: isHovering)
+            .onHover { hovering in
+                isHovering = hovering
+            }
     }
 }
 

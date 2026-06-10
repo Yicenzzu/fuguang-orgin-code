@@ -97,19 +97,18 @@ struct ContentView: View {
 
     private func handleKeyDown(_ key: String) {
         guard editingKey == nil else { return }
+        guard !ScreenshotOverlayController.isActive else { return }
         guard KeyboardLayout.keys.contains(key) else { return }
 
         let binding = store.binding(for: key)
         guard binding.isConfigured else { return }
 
         ActionRunner.run(binding, store: store)
-        if binding.kind != .screenshot {
-            AppWindowController.hideMainWindow()
-        }
+        AppWindowController.hideMainWindow()
     }
 
     private func inlineConfigurationPanel(for key: String, keyFrame: CGRect, containerSize: CGSize) -> some View {
-        let panelWidth: CGFloat = isDetailPanelShown ? 360 : 178
+        let panelWidth: CGFloat = isDetailPanelShown ? 260 : 178
         let isConfigured = store.binding(for: key).isConfigured
         let panelHeight: CGFloat = isDetailPanelShown ? 560 : (isConfigured ? 208 : 154)
         let sideSpacing: CGFloat = 12
@@ -266,10 +265,6 @@ private struct KeyEventMonitor: NSViewRepresentable {
         }
 
         private func handle(_ event: NSEvent) -> NSEvent? {
-            if event.window?.contentView is ScreenshotOverlayView {
-                return event
-            }
-
             if event.keyCode == 53 {
                 onEscape()
                 return nil
