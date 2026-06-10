@@ -1,10 +1,11 @@
 # Fuguang
 
-Fuguang（浮光）是一款 macOS 原生快捷启动工具。它用一个轻量的玻璃质感键盘面板，把常用应用、文件夹、网站和内置工具绑定到键盘按键上，适合快速启动、截图和日常效率操作。
+Fuguang（浮光）是一款快捷启动工具。它用一个轻量的键盘面板，把常用应用、文件夹、网站和内置工具绑定到键盘按键上，适合快速启动、截图和日常效率操作。
 
-当前仓库包含 Fuguang 的 Swift 源码；1.0 版本的可安装 DMG 放在 GitHub Releases 中：
+当前仓库包含 Fuguang 的 macOS Swift 源码和 Windows 原生客户端起点；1.0 版本的可安装 DMG 放在 GitHub Releases 中：
 
-- 源码：`Sources/Fuguang/`
+- macOS 源码：`Sources/Fuguang/`
+- Windows 源码：`Windows/Fuguang.Windows/`
 - 1.0 安装包：[Fuguang-1.0.dmg](https://github.com/Yicenzzu/fuguang-orgin-code/releases/download/v1.0/Fuguang-1.0.dmg)
 
 ## 核心功能
@@ -84,7 +85,7 @@ Fuguang 当前支持以下动作类型：
 
 ## 构建方式
 
-项目目前使用 Swift Package 组织：
+macOS 项目目前使用 Swift Package 组织：
 
 ```bash
 swift build
@@ -101,6 +102,21 @@ swift build -c release
 - macOS 14 Sonoma 或更新版本
 - Swift 5.10+
 - 完整 Xcode 环境推荐
+
+Windows 客户端位于 `Windows/Fuguang.Windows/`，使用 .NET 8 WinForms：
+
+```powershell
+cd Windows\Fuguang.Windows
+dotnet build -c Release
+```
+
+发布 Windows 单文件可执行程序：
+
+```powershell
+dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
+```
+
+Windows 版当前是原生客户端起点，已实现托盘、键盘面板、`Ctrl + 键` 全局快捷键、打开应用/文件夹/网站、显示桌面、主屏截图、剪贴板预览和锁屏。截图选区标注、浮光改图等功能仍待继续迁移。
 
 如果 `xcodebuild` 指向 Command Line Tools，可能会遇到 AppKit / SwiftUI SDK 相关问题。建议切换到完整 Xcode：
 
@@ -142,6 +158,14 @@ Sources/Fuguang/
   ActionRunner.swift                动作执行
   ShortcutModels.swift              动作模型和键盘布局
   ShortcutStore.swift               本地配置持久化
+
+Windows/Fuguang.Windows/
+  Program.cs                        Windows App 入口
+  MainForm.cs                       托盘和键盘面板
+  GlobalHotKeyManager.cs            Windows 全局快捷键注册
+  ActionRunner.cs                   Windows 动作执行
+  ShortcutModels.cs                 动作模型和键盘布局
+  ShortcutStore.cs                  本地配置持久化
 ```
 
 ## 权限与注意事项
@@ -159,6 +183,7 @@ Sources/Fuguang/
 - 浮光剪贴仍未实现完整剪贴板历史。
 - 浮光图鉴目前仍需升级为独立图片管理/预览体验。
 - 当前 DMG 是本地测试包，不是已公证的正式发布包。
+- Windows 版仍是第一版原生客户端骨架，尚未完整追平 macOS 版截图标注和改图能力。
 
 ## 版本
 
