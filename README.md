@@ -2,10 +2,10 @@
 
 Fuguang（浮光）是一款 macOS 原生快捷启动工具。它用一个轻量的玻璃质感键盘面板，把常用应用、文件夹、网站和内置工具绑定到键盘按键上，适合快速启动、截图和日常效率操作。
 
-当前仓库包含 Fuguang 的 Swift 源码，以及 1.0 版本的可安装 DMG：
+当前仓库包含 Fuguang 的 Swift 源码；1.0 版本的可安装 DMG 放在 GitHub Releases 中：
 
 - 源码：`Sources/Fuguang/`
-- 1.0 安装包：`releases/Fuguang-1.0.dmg`
+- 1.0 安装包：[Fuguang-1.0.dmg](https://github.com/Yicenzzu/fuguang-orgin-code/releases/download/v1.0/Fuguang-1.0.dmg)
 
 ## 核心功能
 
@@ -65,11 +65,9 @@ Fuguang 当前支持以下动作类型：
 
 ## 安装 1.0 版本
 
-仓库中已包含 1.0 版本 DMG：
+1.0 版本 DMG 请从 GitHub Releases 下载：
 
-```text
-releases/Fuguang-1.0.dmg
-```
+[Fuguang-1.0.dmg](https://github.com/Yicenzzu/fuguang-orgin-code/releases/download/v1.0/Fuguang-1.0.dmg)
 
 打开 DMG 后，将 `Fuguang.app` 拖拽到“应用程序”快捷方式即可安装。
 
@@ -158,6 +156,6 @@ Sources/Fuguang/
 ### 1.0
 
 - 包含当前源码。
-- 包含 `releases/Fuguang-1.0.dmg`。
+- 安装包发布在 GitHub Releases：`v1.0`。
 - 默认全局组合键为 `Control + 按键`。
 - 支持主界面快捷键切换、截图工具、改图窗口和 DMG 拖拽安装。
